@@ -52,7 +52,17 @@ const App: React.FC = () => {
       localStorage.setItem('tcmDietaryPlan', JSON.stringify(dataToStore));
     } catch (err) {
       console.error("Error generating dietary plan:", err);
-      setError('生成饮食建议时出错，请稍后重试。可能是网络问题或API密钥无效。');
+      let detailedError = '生成饮食建议时出错，请稍后重试。';
+      if (err instanceof Error && err.message) {
+        if (err.message.toLowerCase().includes('api key')) {
+          detailedError = '生成饮食建议时出错：API密钥无效或未正确配置。';
+        } else if (err.message.toLowerCase().includes('fetch')) {
+          detailedError = '生成饮食建议时出错：网络请求失败，请检查您的网络连接。';
+        } else {
+            detailedError = `生成饮食建议时出错：${err.message}`;
+        }
+      }
+      setError(detailedError);
     } finally {
       setIsLoading(false);
     }
