@@ -1,32 +1,11 @@
 import { GoogleGenAI, Type, GenerateContentResponse } from '@google/genai';
 import type { Constitution, Season, DietaryPlan } from '../types';
 
-let ai: GoogleGenAI | null = null;
-
-// This function lazily initializes the GoogleGenAI client on its first use.
-// This prevents the application from crashing at load time in a browser environment
-// where process.env is not defined.
-function getAiClient(): GoogleGenAI {
-  if (ai) {
-    return ai;
-  }
-
-  let apiKey: string | undefined;
-  // Safely check for the API key without causing a ReferenceError in the browser.
-  if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
-    apiKey = process.env.API_KEY;
-  }
-
-  if (!apiKey) {
-    // This error will be thrown when an API call is attempted,
-    // and it can be caught by the UI layer to show a friendly message.
-    throw new Error("API_KEY environment variable not set. Please configure it to run the application.");
-  }
-
-  ai = new GoogleGenAI({ apiKey });
-  return ai;
+if (!process.env.API_KEY) {
+  throw new Error("API_KEY environment variable not set");
 }
 
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 /**
  * A robust wrapper for Gemini API calls with exponential backoff.
@@ -109,8 +88,7 @@ export const generateDietaryPlan = async (constitution: Constitution, season: Se
 请严格按照提供的JSON格式返回你的建议。`;
 
   try {
-    const localAi = getAiClient(); // Get or initialize the AI client.
-    const apiCall = () => localAi.models.generateContent({
+    const apiCall = () => ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt,
       config: {
@@ -127,7 +105,7 @@ export const generateDietaryPlan = async (constitution: Constitution, season: Se
 
   } catch (error) {
     console.error('Error generating dietary plan after retries:', error);
-    throw new Error('Failed to generate dietary plan from Gemini API.');
+    throw error;
   }
 };
 
@@ -156,8 +134,7 @@ ${formattedAnswers}
 你的回答必须严格遵循格式，例如："气虚质 (Qi-Deficient)"。不要包含任何解释、前言或额外的文字。`;
 
   try {
-    const localAi = getAiClient(); // Get or initialize the AI client.
-    const apiCall = () => localAi.models.generateContent({
+    const apiCall = () => ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt,
       config: {
@@ -180,6 +157,6 @@ ${formattedAnswers}
     }
   } catch (error) {
     console.error('Error determining constitution after retries:', error);
-    throw new Error('体质分析失败，请稍后重试。');
+    throw error;
   }
 };
