@@ -1,0 +1,5 @@
+{
+  "name": "中医养生膳食顾问 (TCM Health Dietary Advisor)",
+  "description": "一个根据用户选择的中医体质和季节，利用AI生成个性化饮食养生建议的工具。它提供推荐食谱、食材和饮食禁忌，帮助用户实现健康平衡。",
+  "requestFramePermissions": []
+}
